@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HPCL Analysis, Sachin Savkare</title>
+<meta name="description" content="An eight page Power BI report on HPCL and India's fuel retail network, built from public data.">
+<style>
+/* ---------------------------------------------------------------------------
+   One file, no external anything. It has to open on a phone held in one hand in
+   an interview room, on a laptop, and from a printed QR code with no network to
+   fetch fonts from. So: system fonts, inline SVG, no images, no scripts.
+
+   Layout is mobile first. The grid only becomes columns above 720px, so the
+   phone gets one clean column and the laptop gets the wide version.
+   --------------------------------------------------------------------------- */
+:root{
+  --navy:#0F2244; --ink:#16233A; --body:#3D4A5C; --muted:#6B7A90;
+  --line:#DDE4EE; --bg:#F5F7FB; --card:#FFFFFF;
+  --accent:#1F4E79; --amber:#C77700; --red:#B02A37; --green:#1B7A4B;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--body);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  font-size:17px; line-height:1.6; -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:860px;margin:0 auto;padding:0 20px}
+h1,h2,h3{color:var(--ink);line-height:1.25;margin:0}
+a{color:var(--accent)}
+
+/* ---------- header ---------- */
+header{background:var(--navy);color:#fff;padding:34px 0 30px}
+header h1{color:#fff;font-size:27px;letter-spacing:-.2px}
+header .role{color:#A9BDD8;font-size:15px;margin-top:8px}
+header .who{
+  margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.18);
+  display:flex;flex-wrap:wrap;gap:6px 22px;font-size:14px;color:#C9D8EC;
+}
+header .who b{color:#fff;font-weight:600}
+header .appno{
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);
+  border-radius:999px;padding:3px 12px;letter-spacing:.2px;
+}
+
+/* ---------- the headline stat ---------- */
+.stat{
+  background:var(--card);border:1px solid var(--line);border-radius:14px;
+  margin:-22px 0 0;padding:22px;box-shadow:0 6px 22px rgba(15,34,68,.07);
+}
+.stat .lead{font-size:19px;color:var(--ink);font-weight:600;margin:0 0 16px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.pair div{background:#F7F9FC;border:1px solid var(--line);border-radius:10px;padding:14px}
+.pair .n{font-size:34px;font-weight:800;line-height:1;letter-spacing:-1px}
+.pair .n.up{color:var(--accent)} .pair .n.down{color:var(--red)}
+.pair .l{font-size:13px;color:var(--muted);margin-top:7px;line-height:1.35}
+.stat .after{margin:16px 0 0;font-size:15px;color:var(--body)}
+
+/* ---------- buttons ---------- */
+.actions{display:grid;gap:12px;margin:26px 0 8px}
+.btn{
+  display:block;text-decoration:none;background:var(--card);
+  border:1px solid var(--line);border-left:5px solid var(--accent);
+  border-radius:12px;padding:16px 18px;transition:.15s;
+}
+.btn:hover{border-color:var(--accent);box-shadow:0 4px 16px rgba(31,78,121,.12);transform:translateY(-1px)}
+.btn .t{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700;color:var(--ink)}
+.btn .d{font-size:14px;color:var(--muted);margin-top:4px}
+.btn.primary{border-left-color:var(--amber)}
+.btn svg{flex:none}
+.me{display:flex;flex-wrap:wrap;gap:9px;margin:16px 0 0}
+.mebtn{
+  display:inline-flex;align-items:center;gap:7px;text-decoration:none;
+  background:var(--card);border:1px solid var(--line);border-radius:999px;
+  padding:9px 15px;font-size:14.5px;font-weight:600;color:var(--ink);
+}
+.mebtn:hover{border-color:var(--accent);color:var(--accent)}
+.tip{
+  font-size:13.5px;color:var(--amber);background:#FFF8EC;border:1px solid #F3E2C3;
+  border-radius:9px;padding:10px 13px;margin:2px 0 0;
+}
+
+/* ---------- sections ---------- */
+section{padding:34px 0 4px}
+h2{font-size:13px;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);
+   font-weight:700;margin:0 0 16px}
+.cards{display:grid;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+.card h3{font-size:16.5px;margin-bottom:6px}
+.card p{margin:0;font-size:15px}
+.card .fig{font-size:13px;color:var(--muted);margin-top:9px;padding-top:9px;border-top:1px solid var(--line)}
+.steps{counter-reset:s;display:grid;gap:10px}
+.step{display:flex;gap:13px;align-items:flex-start;font-size:15.5px}
+.step b{
+  counter-increment:s;flex:none;width:25px;height:25px;border-radius:50%;
+  background:var(--accent);color:#fff;font-size:13px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;margin-top:1px;
+}
+.step b::before{content:counter(s)}
+.note{background:#FFFFFF;border:1px solid var(--line);border-left:5px solid var(--muted);
+      border-radius:10px;padding:15px 17px;font-size:14.5px}
+.srcs{display:grid;gap:8px;font-size:14.5px;word-break:break-word}
+.srcs a{display:block;background:var(--card);border:1px solid var(--line);
+        border-radius:9px;padding:11px 14px;text-decoration:none}
+.srcs a:hover{border-color:var(--accent)}
+.srcs span{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+
+footer{margin-top:34px;background:var(--navy);color:#C9D8EC;padding:26px 0;font-size:14.5px}
+footer a{color:#fff}
+footer .n{color:#fff;font-weight:700;font-size:17px;margin-bottom:8px}
+footer .fine{margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.18);
+             font-size:12.5px;color:#93A8C4}
+
+@media (min-width:720px){
+  body{font-size:17.5px}
+  header{padding:46px 0 40px}
+  header h1{font-size:36px}
+  .stat{padding:28px;margin-top:-26px}
+  .actions{grid-template-columns:1fr 1fr}
+  .cards{grid-template-columns:1fr 1fr}
+  .srcs{grid-template-columns:1fr 1fr}
+  section{padding:42px 0 4px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>HPCL, and what the data says</h1>
+    <div class="role">An eight page Power BI report on India's fuel retail network, built from public data.</div>
+    <div class="who">
+      <span><b>Sachin Savkare</b></span>
+      <span>Senior Officer, Sales</span>
+      <span class="appno">Application no. <b>202749000941</b></span>
+      <span>September 2026</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="stat">
+    <p class="lead">In six years the network grew far faster than the fuel going through it.</p>
+    <div class="pair">
+      <div><div class="n up">+52%</div><div class="l">retail outlets, March 2020 to May 2026</div></div>
+      <div><div class="n down">+7%</div><div class="l">fuel sold through them, comparable span</div></div>
+    </div>
+    <p class="after">Average sales per outlet has to fall. That is arithmetic, not underperformance, and it is a territory problem rather than a head office one.</p>
+  </div>
+
+  <div class="actions">
+    <a class="btn primary" href="https://app.powerbi.com/view?r=eyJrIjoiOWJkYjJkYTEtZDc1OS00Mjk1LTllM2UtMDUwNzA1Y2M5YzJlIiwidCI6ImNlOGY3MTI3LWQzMDMtNDgxOC05NWJiLTJiNmExNTZiZDQ5NSIsImMiOjF9" target="_blank" rel="noopener">
+      <span class="t">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C77700" stroke-width="1.9" stroke-linecap="round"><rect x="2.5" y="3" width="15" height="11" rx="1.5"/><path d="M7 17h6M10 14v3"/></svg>
+        Open the live dashboard
+      </span>
+      <span class="d">All eight pages, live in Power BI. Filters work.</span>
+    </a>
+
+    <a class="btn" href="https://youtu.be/Vor2vCM3Tos" target="_blank" rel="noopener">
+      <span class="t">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#1F4E79" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M8.2 6.8l5.2 3.2-5.2 3.2z"/></svg>
+        Watch the walkthrough
+      </span>
+      <span class="d">Twelve minutes. Every page, and what I take from it.</span>
+    </a>
+
+    <a class="btn" href="https://drive.google.com/file/d/1Q6rXZg4y4acOsWflno7-4yRStaMZub2g/view" target="_blank" rel="noopener">
+      <span class="t">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#1F4E79" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2.5h6l4 4v11H5z"/><path d="M11 2.5v4h4M7.5 11h5M7.5 14h5"/></svg>
+        Read the full report
+      </span>
+      <span class="d">23 pages. Every figure with its source and its date.</span>
+    </a>
+
+    <a class="btn" href="https://docs.google.com/presentation/d/1FfAIEU-TwVVvfvsJFHCnS0ZTSUN3YtY5/preview" target="_blank" rel="noopener">
+      <span class="t">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#1F4E79" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3.5" width="15" height="10" rx="1.5"/><path d="M10 13.5v3M7 16.5h6"/></svg>
+        See the deck
+      </span>
+      <span class="d">Nine slides. The company, the sources, the method.</span>
+    </a>
+  </div>
+
+  <p class="tip"><b>Best opened on a laptop.</b> The dashboard has eight pages, slicers and a map. A phone will show it, but the detail is meant for a full screen.</p>
+
+  <div class="me">
+    <a class="mebtn" href="Resume.pdf" target="_blank" rel="noopener">
+      <svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2.5h6l4 4v11H5z"/><path d="M11 2.5v4h4M7.5 11h5M7.5 14h3"/></svg>
+      Resume
+    </a>
+    <a class="mebtn" href="https://portfolio.sachinai.cfd" target="_blank" rel="noopener">
+      <svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7.5"/><path d="M2.5 10h15M10 2.5c2 2.4 2 12.6 0 15M10 2.5c-2 2.4-2 12.6 0 15"/></svg>
+      Portfolio
+    </a>
+    <a class="mebtn" href="https://github.com/SachinSavkare" target="_blank" rel="noopener" aria-label="GitHub">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38l-.01-1.49c-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48l-.01 2.2c0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a>
+    <a class="mebtn" href="https://www.linkedin.com/in/sachinsavkare" target="_blank" rel="noopener" aria-label="LinkedIn">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor"><path d="M3.4 5.3H.6V15h2.8zM2 1a1.6 1.6 0 1 0 0 3.2A1.6 1.6 0 0 0 2 1M15.4 9.6c0-2.7-1.4-3.9-3.3-3.9-1.5 0-2.2.8-2.6 1.4V5.3H6.7c0 .8 0 9.7 0 9.7h2.8V9.6c0-.3 0-.5.1-.7.2-.5.7-1.1 1.5-1.1 1 0 1.5.8 1.5 2V15h2.8z"/></svg>
+      LinkedIn
+    </a>
+  </div>
+
+  <section>
+    <h2>What the data showed</h2>
+    <div class="cards">
+      <div class="card">
+        <h3>A record year, then a loss quarter</h3>
+        <p>Rs 17,175 crore of profit in 2025-26, the highest ever, and a loss of Rs 11,526 crore eleven weeks later. Refining was strong in that quarter, so the swing came from marketing margin.</p>
+        <div class="fig">Gross refining margin 23.80 dollars a barrel, against 3.08 a year earlier</div>
+      </div>
+      <div class="card">
+        <h3>The network is outrunning the fuel</h3>
+        <p>16,476 outlets became 25,131. Volume grew about 7 percent over a comparable span. Opening more outlets raises reach and lowers the average at the same time.</p>
+        <div class="fig">52 percent against 7 percent, March 2020 to May 2026</div>
+      </div>
+      <div class="card">
+        <h3>Ten states hold most of the network</h3>
+        <p>A national average describes almost no real state, so it cannot be used as a territory target without being too soft in one place and too hard in another.</p>
+        <div class="fig">71.4 percent in ten states. Uttar Pradesh 13,317, Lakshadweep 4</div>
+      </div>
+      <div class="card">
+        <h3>Price is not a lever sales holds</h3>
+        <p>The pump price is set by policy. What a sales officer can work is the mix: which products, which customers, which sites.</p>
+        <div class="fig">About Rs 2,400 crore a day absorbed by the industry, March 2026</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>How it was built</h2>
+    <div class="steps">
+      <div class="step"><b></b><span>Read each source document itself, never a summary of it.</span></div>
+      <div class="step"><b></b><span>Log every figure with its value, its as on date and whether it was verified.</span></div>
+      <div class="step"><b></b><span>Reconcile the conflicts. The outlet count appears five different ways, and all five are correct at different dates.</span></div>
+      <div class="step"><b></b><span>Model it. 21 tables and about 2,200 rows in a star schema, 10 relationships, all single direction.</span></div>
+      <div class="step"><b></b><span>Write 89 DAX measures, grouped by the page each one serves.</span></div>
+      <div class="step"><b></b><span>Build every page the same way: a headline, six KPI cards, what it means, the charts, and a footer naming the sources.</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Where the data came from</h2>
+    <div class="srcs">
+      <a href="https://ppac.gov.in/uploads/page-images/1787131130_Statewise_Retail_Outlets.xls" target="_blank" rel="noopener">PPAC, state wise retail outlets<span>Every company, 2012 to 2026</span></a>
+      <a href="https://ppac.gov.in/download.php?file=rep_studies/1789735879_Final__Snapshot_of_Indias_Oil_Gas_data_Aug_2026_V3.pdf" target="_blank" rel="noopener">PPAC, monthly snapshot<span>The company wise network split</span></a>
+      <a href="https://mopng.gov.in/files/TableManagements/2026-02-25-141451-b06fw-IPNG_Statistics-Report_2024-25.pdf" target="_blank" rel="noopener">MoPNG statistics 2024-25<span>Alternate fuel and deregulation dates</span></a>
+      <a href="https://www.pib.gov.in/PressReleasePage.aspx?PRID=2245970&amp;lang=1&amp;reg=3" target="_blank" rel="noopener">PIB press release<span>Under recovery per litre</span></a>
+      <a href="https://www.hindustanpetroleum.com/documents/pdf/Investor-Presentation-Q4-FY-2025-26.pdf" target="_blank" rel="noopener">HPCL investor presentation<span>Q4 and full year 2025-26</span></a>
+      <a href="https://www.hindustanpetroleum.com/images/pdf/FinResQ1FY2627.pdf" target="_blank" rel="noopener">HPCL results filing<span>Quarter ended 30 June 2026</span></a>
+    </div>
+  </section>
+
+  <section>
+    <h2>One thing to be clear about</h2>
+    <p class="note">Two of the eight pages use illustrative data. HPCL publishes no outlet level figures to anyone outside the company, so those outlet, distributor and customer numbers are invented for demonstration, and both pages say so on screen. Their structure is real. Every other page uses published figures only.</p>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="n">Sachin Savkare</div>
+    <div>+91 96890 26642 &nbsp;&middot;&nbsp; <a href="mailto:sachinsavkare08@gmail.com">sachinsavkare08@gmail.com</a></div>
+    <div>Application 202749000941</div>
+    <div class="fine">Independent analysis of public information. Not affiliated with HPCL.</div>
+  </div>
+</footer>
+
+</body>
+</html>
